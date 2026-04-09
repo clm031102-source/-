@@ -59,6 +59,7 @@ function byGroup(trades: Trade[], key: (t: Trade) => string) {
 export function AnalyticsPage() {
   const { trades, strategies } = useJournalStore();
   const [filters, setFilters] = useState({ strategy: 'all', symbol: 'all', direction: 'all', tag: 'all', emotion: 'all', follows: 'all', from: '', to: '' });
+  const [showWorkbench, setShowWorkbench] = useState(false);
 
   const uniqueSymbols = [...new Set(trades.map((t) => t.symbol))];
   const uniqueTags = [...new Set(trades.flatMap((t) => t.tags))];
@@ -138,10 +139,13 @@ export function AnalyticsPage() {
           <h2 className="text-2xl font-semibold gold-text">统计分析</h2>
           <p className="muted">从策略、品种、方向、情绪与时间维度洞察交易表现</p>
         </div>
-        <p className="text-sm muted">当前范围：{filtered.length} 笔交易</p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm muted">当前范围：{filtered.length} 笔交易</p>
+          <Button variant="primary" onClick={() => setShowWorkbench((v) => !v)}>{showWorkbench ? '收起工作台' : '工作台'}</Button>
+        </div>
       </Card>
 
-      <Card>
+      {showWorkbench && <Card>
         <div className="grid gap-2 md:grid-cols-4 xl:grid-cols-8">
           <Select value={filters.strategy} onChange={(e) => setFilters({ ...filters, strategy: e.target.value })}><option value="all">全部策略</option>{strategies.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</Select>
           <Select value={filters.symbol} onChange={(e) => setFilters({ ...filters, symbol: e.target.value })}><option value="all">全部品种</option>{uniqueSymbols.map((s) => <option key={s}>{s}</option>)}</Select>
@@ -152,7 +156,7 @@ export function AnalyticsPage() {
           <Input type="date" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} />
           <div className="flex gap-2"><Input type="date" value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} /><Button variant="ghost" onClick={() => setFilters({ strategy: 'all', symbol: 'all', direction: 'all', tag: 'all', emotion: 'all', follows: 'all', from: '', to: '' })}>重置</Button></div>
         </div>
-      </Card>
+      </Card>}
 
       <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-5">
         {[
@@ -175,20 +179,20 @@ export function AnalyticsPage() {
         </Card>
         <Card>
           <h3 className="mb-2 font-semibold">月度盈亏柱状图</h3>
-          <div className="h-72"><ResponsiveContainer><BarChart data={monthly}><CartesianGrid stroke="#26303e" /><XAxis dataKey="month" stroke="#7f8ca3" /><YAxis stroke="#7f8ca3" /><Tooltip /><Bar dataKey="pnl">{monthly.map((m) => <Cell key={m.month} fill={m.pnl >= 0 ? chartPalette.green : chartPalette.red} />)}</Bar></BarChart></ResponsiveContainer></div>
+          <div className="h-72"><ResponsiveContainer><BarChart data={monthly}><CartesianGrid stroke="#26303e" /><XAxis dataKey="month" stroke="#7f8ca3" /><YAxis stroke="#7f8ca3" /><Tooltip /><Bar dataKey="pnl" barSize={26} radius={[6,6,0,0]}>{monthly.map((m) => <Cell key={m.month} fill={m.pnl >= 0 ? chartPalette.green : chartPalette.red} />)}</Bar></BarChart></ResponsiveContainer></div>
         </Card>
       </div>
 
       <div className="grid gap-3 xl:grid-cols-3">
-        <Card><h3 className="mb-2 font-semibold">策略表现对比</h3><div className="h-60"><ResponsiveContainer><BarChart data={strategyData}><CartesianGrid stroke="#26303e" /><XAxis dataKey="name" stroke="#7f8ca3" /><YAxis stroke="#7f8ca3" /><Tooltip /><Bar dataKey="pnl" fill={chartPalette.gold} /></BarChart></ResponsiveContainer></div></Card>
-        <Card><h3 className="mb-2 font-semibold">品种表现对比</h3><div className="h-60"><ResponsiveContainer><BarChart data={symbolData}><CartesianGrid stroke="#26303e" /><XAxis dataKey="name" stroke="#7f8ca3" /><YAxis stroke="#7f8ca3" /><Tooltip /><Bar dataKey="pnl" fill={chartPalette.blue} /></BarChart></ResponsiveContainer></div></Card>
+        <Card><h3 className="mb-2 font-semibold">策略表现对比</h3><div className="h-60"><ResponsiveContainer><BarChart data={strategyData}><CartesianGrid stroke="#26303e" /><XAxis dataKey="name" stroke="#7f8ca3" /><YAxis stroke="#7f8ca3" /><Tooltip /><Bar dataKey="pnl" barSize={28} radius={[6,6,0,0]} fill={chartPalette.gold} /></BarChart></ResponsiveContainer></div></Card>
+        <Card><h3 className="mb-2 font-semibold">品种表现对比</h3><div className="h-60"><ResponsiveContainer><BarChart data={symbolData}><CartesianGrid stroke="#26303e" /><XAxis dataKey="name" stroke="#7f8ca3" /><YAxis stroke="#7f8ca3" /><Tooltip /><Bar dataKey="pnl" barSize={24} radius={[6,6,0,0]} fill={chartPalette.blue} /></BarChart></ResponsiveContainer></div></Card>
         <Card><h3 className="mb-2 font-semibold">方向分析</h3>{directionData.map((d) => <p key={d.name} className="mb-1 text-sm">{d.name}：{d.count} 笔 / 胜率 {d.winRate.toFixed(1)}% / <span className={d.pnl >= 0 ? 'stat-good' : 'stat-bad'}>{d.pnl.toFixed(2)}</span></p>)}</Card>
       </div>
 
       <div className="grid gap-3 xl:grid-cols-3">
         <Card><h3 className="mb-2 font-semibold">盈亏分布图</h3><div className="h-60"><ResponsiveContainer><ScatterChart><CartesianGrid stroke="#26303e" /><XAxis dataKey="idx" stroke="#7f8ca3" /><YAxis dataKey="pnl" stroke="#7f8ca3" /><Tooltip /><Scatter data={pnlDistribution} fill={chartPalette.gold} /></ScatterChart></ResponsiveContainer></div></Card>
-        <Card><h3 className="mb-2 font-semibold">星期维度表现</h3><div className="h-60"><ResponsiveContainer><BarChart data={weekdayData}><CartesianGrid stroke="#26303e" /><XAxis dataKey="day" stroke="#7f8ca3" /><YAxis stroke="#7f8ca3" /><Tooltip /><Bar dataKey="pnl" fill={chartPalette.blue} /></BarChart></ResponsiveContainer></div></Card>
-        <Card><h3 className="mb-2 font-semibold">情绪状态影响</h3>{emotionData.length ? <div className="h-60"><ResponsiveContainer><PieChart><Pie data={emotionData} dataKey="count" nameKey="name" outerRadius={80} fill={chartPalette.gold} /><Tooltip /></PieChart></ResponsiveContainer></div> : <p className="muted">暂无情绪数据，已自动降级。</p>}</Card>
+        <Card><h3 className="mb-2 font-semibold">星期维度表现</h3><div className="h-60"><ResponsiveContainer><BarChart data={weekdayData}><CartesianGrid stroke="#26303e" /><XAxis dataKey="day" stroke="#7f8ca3" /><YAxis stroke="#7f8ca3" /><Tooltip /><Bar dataKey="pnl" barSize={24} radius={[6,6,0,0]} fill={chartPalette.blue} /></BarChart></ResponsiveContainer></div></Card>
+        <Card><h3 className="mb-2 font-semibold">情绪状态影响</h3>{emotionData.length ? <div className="h-60"><ResponsiveContainer><PieChart><Pie data={emotionData} dataKey="count" nameKey="name" outerRadius={75} label fill={chartPalette.gold} /><Tooltip /></PieChart></ResponsiveContainer></div> : <p className="muted">暂无情绪数据，已自动降级。</p>}</Card>
       </div>
 
       <Card>
