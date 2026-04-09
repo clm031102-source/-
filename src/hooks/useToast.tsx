@@ -12,7 +12,7 @@ export function ToastProvider({ children }: PropsWithChildren) {
       push: (text: string) => {
         const id = Date.now();
         setToasts((prev) => [...prev, { id, text }]);
-        setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 1800);
+        setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 2200);
       },
     }),
     [],
@@ -21,9 +21,9 @@ export function ToastProvider({ children }: PropsWithChildren) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 space-y-2">
+      <div className="fixed bottom-5 right-5 z-50 space-y-2">
         {toasts.map((toast) => (
-          <div key={toast.id} className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-lg">
+          <div key={toast.id} className="surface min-w-[220px] rounded-xl px-3 py-2 text-sm text-[var(--text)]">
             {toast.text}
           </div>
         ))}

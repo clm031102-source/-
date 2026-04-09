@@ -5,27 +5,34 @@
 :root {
   color-scheme: dark;
   font-family: Inter, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  --bg: #070809;
-  --bg-elevated: #111315;
-  --panel: #171a1f;
-  --panel-2: #121419;
-  --line: #30343a;
-  --line-soft: #252a31;
-  --text: #e2e5ea;
-  --text-soft: #9aa2ad;
-  --gold: #c4a06a;
-  --gold-soft: #7f6a48;
-  --green: #2ea56f;
-  --red: #cd6464;
+  --bg: #070707;
+  --bg-soft: #101010;
+  --panel: #151515;
+  --panel-2: #1b1b1b;
+  --panel-3: #202020;
+  --line: #343434;
+  --line-soft: #2a2a2a;
+  --text: #ebe9e2;
+  --text-soft: #a5a39c;
+  --gold: #c6a46f;
+  --gold-soft: #7f6843;
+  --green: #38b27b;
+  --red: #d56767;
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--text); }
+body {
+  margin: 0;
+  background: radial-gradient(circle at 10% 0%, #111111 0%, #070707 44%, #050505 100%);
+  color: var(--text);
+}
+
+#root { min-height: 100vh; }
 
 .surface {
-  background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
-  border: 1px solid color-mix(in oklab, var(--line) 88%, var(--gold-soft) 12%);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--panel) 92%, #000 8%) 0%, var(--panel-2) 100%);
+  border: 1px solid color-mix(in oklab, var(--line) 84%, var(--gold-soft) 16%);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.4);
 }
 
 .gold-text { color: var(--gold); }
@@ -33,9 +40,39 @@ body { margin: 0; background: var(--bg); color: var(--text); }
 .stat-good { color: var(--green); }
 .stat-bad { color: var(--red); }
 
+.table-row-hover {
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.table-row-hover:hover {
+  background: #1f1d1a;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  filter: invert(0.86);
+}
+
+.recharts-surface,
+.recharts-wrapper {
+  outline: none;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: #2b2b2b;
+}
+
 .recharts-default-tooltip {
-  background: #151820 !important;
-  border: 1px solid #3a414d !important;
+  background: #121212 !important;
+  border: 1px solid #3b3429 !important;
   border-radius: 10px !important;
-  color: #e5ecf8 !important;
+  color: #f1ece1 !important;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
+}
+
+.recharts-tooltip-label,
+.recharts-tooltip-item,
+.recharts-tooltip-item-list {
+  color: #f1ece1 !important;
 }

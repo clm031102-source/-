@@ -7,6 +7,7 @@ import { NewTradePage } from '@/pages/NewTradePage';
 import { StrategiesPage } from '@/pages/StrategiesPage';
 import { SummariesPage } from '@/pages/SummariesPage';
 import { TradesPage } from '@/pages/TradesPage';
+import { SettingsPage } from '@/pages/SettingsPage';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/strategies" element={<StrategiesPage />} />
         <Route path="/summaries" element={<SummariesPage />} />
         <Route path="/calculator" element={<CalculatorPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
