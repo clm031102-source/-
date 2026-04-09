@@ -6,8 +6,6 @@ import {
   Cell,
   ComposedChart,
   Line,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Scatter,
   ScatterChart,
@@ -141,7 +139,7 @@ export function AnalyticsPage() {
         </div>
         <div className="flex items-center gap-2">
           <p className="text-sm muted">当前范围：{filtered.length} 笔交易</p>
-          <Button variant="primary" onClick={() => setShowWorkbench((v) => !v)}>{showWorkbench ? '收起工作台' : '工作台'}</Button>
+          <Button variant="primary" onClick={() => setShowWorkbench((v) => !v)}>{showWorkbench ? '收起筛选' : '筛选'}</Button>
         </div>
       </Card>
 
@@ -192,7 +190,7 @@ export function AnalyticsPage() {
       <div className="grid gap-3 xl:grid-cols-3">
         <Card><h3 className="mb-2 font-semibold">盈亏分布图</h3><div className="h-60"><ResponsiveContainer><ScatterChart><CartesianGrid stroke="#26303e" /><XAxis dataKey="idx" stroke="#7f8ca3" /><YAxis dataKey="pnl" stroke="#7f8ca3" /><Tooltip /><Scatter data={pnlDistribution} fill={chartPalette.gold} /></ScatterChart></ResponsiveContainer></div></Card>
         <Card><h3 className="mb-2 font-semibold">星期维度表现</h3><div className="h-60"><ResponsiveContainer><BarChart data={weekdayData}><CartesianGrid stroke="#26303e" /><XAxis dataKey="day" stroke="#7f8ca3" /><YAxis stroke="#7f8ca3" /><Tooltip /><Bar dataKey="pnl" barSize={24} radius={[6,6,0,0]} fill={chartPalette.blue} /></BarChart></ResponsiveContainer></div></Card>
-        <Card><h3 className="mb-2 font-semibold">情绪状态影响</h3>{emotionData.length ? <div className="h-60"><ResponsiveContainer><PieChart><Pie data={emotionData} dataKey="count" nameKey="name" outerRadius={75} label fill={chartPalette.gold} /><Tooltip /></PieChart></ResponsiveContainer></div> : <p className="muted">暂无情绪数据，已自动降级。</p>}</Card>
+        <Card><h3 className="mb-2 font-semibold">情绪状态影响</h3>{emotionData.length ? <div className="h-60"><ResponsiveContainer><BarChart data={emotionData} layout="vertical"><CartesianGrid stroke="#26303e" /><XAxis type="number" stroke="#7f8ca3" /><YAxis dataKey="name" type="category" width={80} stroke="#c8a978" /><Tooltip /><Bar dataKey="pnl" barSize={18} radius={[0,6,6,0]} fill={chartPalette.gold} /></BarChart></ResponsiveContainer></div> : <p className="muted">暂无情绪数据，已自动降级。</p>}</Card>
       </div>
 
       <Card>

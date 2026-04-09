@@ -18,7 +18,7 @@ export function AppLayout() {
           <h1 className="mb-5 border-b border-[var(--line-soft)] pb-3 text-2xl font-semibold tracking-tight gold-text">交易中枢</h1>
           <div className="space-y-2">
             {items.map(([to, label]) => (
-              <NavLink key={to} to={to} className={({ isActive }) => `block rounded-xl px-3 py-2 text-base transition ${isActive ? 'bg-[#252f3e] text-[#f1e3c7] border border-[#8a7553]' : 'text-[var(--text-soft)] hover:bg-[#1a2230] hover:text-[var(--text)]'}`}>
+              <NavLink key={to} to={to} className={({ isActive }) => `block rounded-xl px-3 py-2 text-base transition ${isActive ? 'bg-[#24272d] text-[#f0dfc2] border border-[#7f6a48]' : 'text-[var(--text-soft)] hover:bg-[#1d2027] hover:text-[var(--text)]'}`}>
                 {label}
               </NavLink>
             ))}
