@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  font-family: Inter, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --bg: #080b11;
+  --bg-elevated: #101620;
+  --panel: #131c29;
+  --panel-2: #0f1723;
+  --line: #2a3443;
+  --line-soft: #232c39;
+  --text: #dce3ee;
+  --text-soft: #8f9aab;
+  --gold: #c8a978;
+  --gold-soft: #8a7553;
+  --green: #29a66a;
+  --red: #d35d5d;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(circle at top, #131d2d 0%, var(--bg) 42%); color: var(--text); }
+
+.surface {
+  background: linear-gradient(180deg, color-mix(in oklab, var(--panel) 90%, black 10%) 0%, var(--panel-2) 100%);
+  border: 1px solid color-mix(in oklab, var(--line) 82%, var(--gold-soft) 18%);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.24);
+}
+
+.gold-text { color: var(--gold); }
+.muted { color: var(--text-soft); }
+.stat-good { color: var(--green); }
+.stat-bad { color: var(--red); }
+
+.recharts-default-tooltip {
+  background: #0f1723 !important;
+  border: 1px solid #3f4c60 !important;
+  border-radius: 10px !important;
+  color: #e5ecf8 !important;
+}
