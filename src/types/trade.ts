@@ -1,4 +1,5 @@
 export type Direction = '做多' | '做空';
+export type Emotion = '冷静' | '犹豫' | '焦虑' | '上头' | '报复性交易';
 
 export interface Strategy {
   id: string;
@@ -27,11 +28,21 @@ export interface Trade {
   stopLoss: number;
   takeProfit: number;
   strategyId: string;
+  followsSystem: boolean;
   entryReason: string;
   exitReason: string;
   tags: string[];
-  emotion: '冷静' | '犹豫' | '焦虑' | '上头';
+  emotion: Emotion;
   review: string;
+  holdingMinutes?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface WeeklySummary {
+  id: string;
+  period: '日' | '周' | '月';
+  range: string;
+  content: string;
+  createdAt: string;
 }

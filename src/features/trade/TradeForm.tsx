@@ -8,19 +8,16 @@ import { Textarea } from '@/components/ui/Textarea';
 import { useJournalStore } from '@/store/useJournalStore';
 import { Trade } from '@/types/trade';
 
-interface Props {
-  initial?: Trade;
-  onSubmitSuccess?: () => void;
-}
+interface Props { initial?: Trade; onSubmitSuccess?: () => void }
 
 const hints: Record<string, string> = {
-  entryPrice: '例：84250。填写你的计划入场价。',
-  exitPrice: '例：84590。填写你的实际出场价。',
-  quantity: '例：0.7。填写本次下单数量。',
-  leverage: '例：20。币圈常见 5-20x，按你真实杠杆填。',
-  fee: '例：4。整笔交易手续费总额。',
-  stopLoss: '例：84080。失效位，防止扛单。',
-  takeProfit: '例：84590。你的计划止盈价。',
+  entryPrice: '例：84250，计划入场价。',
+  exitPrice: '例：84590，实际出场价。',
+  quantity: '例：0.7，下单数量。',
+  leverage: '例：20，真实杠杆。',
+  fee: '例：4，来回总手续费。',
+  stopLoss: '例：84080，失效位。',
+  takeProfit: '例：84590，计划止盈位。',
 };
 
 export function TradeForm({ initial, onSubmitSuccess }: Props) {
@@ -38,11 +35,13 @@ export function TradeForm({ initial, onSubmitSuccess }: Props) {
     stopLoss: initial?.stopLoss ?? 0,
     takeProfit: initial?.takeProfit ?? 0,
     strategyId: initial?.strategyId ?? strategies[0]?.id ?? '',
+    followsSystem: initial?.followsSystem ?? true,
     entryReason: initial?.entryReason ?? '',
     exitReason: initial?.exitReason ?? '',
     tags: initial?.tags.join(',') ?? '',
     emotion: initial?.emotion ?? '冷静',
     review: initial?.review ?? '',
+    holdingMinutes: initial?.holdingMinutes ?? 15,
   });
 
   const pnl = useMemo(() => {
@@ -75,7 +74,7 @@ export function TradeForm({ initial, onSubmitSuccess }: Props) {
   return (
     <div className="space-y-4">
       <Card>
-        <h3 className="mb-3 text-2xl font-semibold">基础信息</h3>
+        <h3 className="mb-3 text-xl font-semibold gold-text">基础信息</h3>
         <div className="grid gap-3 md:grid-cols-4">
           <Input placeholder="交易标题*" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           <Input type="datetime-local" value={form.tradeDate} onChange={(e) => setForm({ ...form, tradeDate: e.target.value })} />
@@ -83,31 +82,30 @@ export function TradeForm({ initial, onSubmitSuccess }: Props) {
           <Select value={form.direction} onChange={(e) => setForm({ ...form, direction: e.target.value as Trade['direction'] })}><option>做多</option><option>做空</option></Select>
         </div>
         <div className="mt-3 grid gap-3 md:grid-cols-4">
-          {(['entryPrice', 'exitPrice', 'quantity', 'leverage', 'fee', 'stopLoss', 'takeProfit'] as const).map((key) => (
+          {(['entryPrice', 'exitPrice', 'quantity', 'leverage', 'fee', 'stopLoss', 'takeProfit', 'holdingMinutes'] as const).map((key) => (
             <div key={key}>
               <Input type="number" step="0.0001" value={String(form[key])} onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })} />
-              <p className="mt-1 text-xs text-slate-400">{hints[key]}</p>
+              <p className="mt-1 text-xs muted">{hints[key] ?? '例：20，分钟。'}</p>
             </div>
           ))}
-          <Input readOnly value={`当前预估盈亏：${pnl} (${pnlPercent}%)`} className={pnl >= 0 ? 'text-emerald-300' : 'text-rose-300'} />
+          <Input readOnly value={`当前预估盈亏：${pnl} (${pnlPercent}%)`} className={pnl >= 0 ? 'stat-good' : 'stat-bad'} />
         </div>
       </Card>
 
       <Card>
-        <h3 className="mb-3 text-2xl font-semibold">策略与执行</h3>
+        <h3 className="mb-3 text-xl font-semibold gold-text">策略与执行</h3>
         <div className="grid gap-3 md:grid-cols-2">
-          <Select value={form.strategyId} onChange={(e) => setForm({ ...form, strategyId: e.target.value })}>
-            {strategies.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </Select>
-          <Select value={form.emotion} onChange={(e) => setForm({ ...form, emotion: e.target.value as Trade['emotion'] })}><option>冷静</option><option>犹豫</option><option>焦虑</option><option>上头</option></Select>
-          <Textarea placeholder="入场理由*（结构、信号、预期）" value={form.entryReason} onChange={(e) => setForm({ ...form, entryReason: e.target.value })} />
-          <Textarea placeholder="出场理由*（止盈/止损触发点）" value={form.exitReason} onChange={(e) => setForm({ ...form, exitReason: e.target.value })} />
-          <Input placeholder="标签（逗号分隔，如 计划内,A+机会）" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} />
-          <Textarea placeholder="复盘内容（本笔做得好/不足）" value={form.review} onChange={(e) => setForm({ ...form, review: e.target.value })} />
+          <Select value={form.strategyId} onChange={(e) => setForm({ ...form, strategyId: e.target.value })}>{strategies.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</Select>
+          <Select value={String(form.followsSystem)} onChange={(e) => setForm({ ...form, followsSystem: e.target.value === 'true' })}><option value="true">符合系统</option><option value="false">不符合系统</option></Select>
+          <Select value={form.emotion} onChange={(e) => setForm({ ...form, emotion: e.target.value as Trade['emotion'] })}><option>冷静</option><option>犹豫</option><option>焦虑</option><option>上头</option><option>报复性交易</option></Select>
+          <Input placeholder="标签（逗号分隔）" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} />
+          <Textarea placeholder="入场理由*" value={form.entryReason} onChange={(e) => setForm({ ...form, entryReason: e.target.value })} />
+          <Textarea placeholder="出场理由*" value={form.exitReason} onChange={(e) => setForm({ ...form, exitReason: e.target.value })} />
+          <Textarea className="md:col-span-2" placeholder="复盘" value={form.review} onChange={(e) => setForm({ ...form, review: e.target.value })} />
         </div>
       </Card>
 
-      <div className="flex gap-2"><Button onClick={submit}>{initial ? '保存修改' : '保存交易'}</Button></div>
+      <div className="flex gap-2"><Button variant="primary" onClick={submit}>{initial ? '保存修改' : '保存交易'}</Button></div>
     </div>
   );
 }
