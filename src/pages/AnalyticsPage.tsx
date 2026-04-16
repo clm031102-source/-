@@ -90,7 +90,7 @@ export function AnalyticsPage() {
       <Card className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold gold-text">统计分析</h2>
-          <p className="muted">按品种、策略、setup、mistake、方向、情绪与时间拆解盈亏来源</p>
+          <p className="muted">按品种、策略、入场形态、复盘失误、方向、情绪与时间拆解盈亏来源</p>
         </div>
         <div className="flex items-center gap-3">
           <p className="text-sm muted">当前数据范围：{filtered.length} 笔</p>
@@ -103,8 +103,8 @@ export function AnalyticsPage() {
           <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-10">
             <Select value={filters.symbol} onChange={(e) => setFilters({ ...filters, symbol: e.target.value })}><option value="all">全部品种</option>{uniqueSymbols.map((s) => <option key={s}>{s}</option>)}</Select>
             <Select value={filters.strategy} onChange={(e) => setFilters({ ...filters, strategy: e.target.value })}><option value="all">全部策略</option>{strategies.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</Select>
-            <Select value={filters.setup} onChange={(e) => setFilters({ ...filters, setup: e.target.value })}><option value="all">全部setup</option>{uniqueSetups.map((s) => <option key={s}>{s}</option>)}</Select>
-            <Select value={filters.mistake} onChange={(e) => setFilters({ ...filters, mistake: e.target.value })}><option value="all">全部mistake</option>{uniqueMistakes.map((s) => <option key={s}>{s}</option>)}</Select>
+            <Select value={filters.setup} onChange={(e) => setFilters({ ...filters, setup: e.target.value })}><option value="all">全部入场形态</option>{uniqueSetups.map((s) => <option key={s}>{s}</option>)}</Select>
+            <Select value={filters.mistake} onChange={(e) => setFilters({ ...filters, mistake: e.target.value })}><option value="all">全部复盘失误</option>{uniqueMistakes.map((s) => <option key={s}>{s}</option>)}</Select>
             <Select value={filters.direction} onChange={(e) => setFilters({ ...filters, direction: e.target.value })}><option value="all">全部方向</option><option>做多</option><option>做空</option></Select>
             <Select value={filters.tag} onChange={(e) => setFilters({ ...filters, tag: e.target.value })}><option value="all">全部标签</option>{uniqueTags.map((t) => <option key={t}>{t}</option>)}</Select>
             <Select value={filters.follows} onChange={(e) => setFilters({ ...filters, follows: e.target.value })}><option value="all">系统符合度</option><option value="true">符合系统</option><option value="false">不符合系统</option></Select>
@@ -119,10 +119,10 @@ export function AnalyticsPage() {
         <Card><p className="muted text-xs">总交易</p><p className="mt-1 text-2xl font-semibold">{overview.totalTrades}</p></Card>
         <Card><p className="muted text-xs">总盈亏</p><p className={`mt-1 text-2xl font-semibold ${overview.totalPnl >= 0 ? 'stat-good' : 'stat-bad'}`}>{overview.totalPnl.toFixed(2)}</p></Card>
         <Card><p className="muted text-xs">胜率</p><p className="mt-1 text-2xl font-semibold">{overview.winRate.toFixed(1)}%</p></Card>
-        <Card><p className="muted text-xs">Expectancy</p><p className="mt-1 text-2xl font-semibold">{overview.expectancy.toFixed(2)}</p></Card>
-        <Card><p className="muted text-xs">Avg Winner</p><p className="mt-1 text-2xl font-semibold stat-good">{overview.avgWinner.toFixed(2)}</p></Card>
-        <Card><p className="muted text-xs">Avg Loser</p><p className="mt-1 text-2xl font-semibold stat-bad">{overview.avgLoser.toFixed(2)}</p></Card>
-        <Card><p className="muted text-xs">Profit Factor</p><p className="mt-1 text-2xl font-semibold">{overview.profitFactor.toFixed(2)}</p></Card>
+        <Card><p className="muted text-xs">单笔期望</p><p className="mt-1 text-2xl font-semibold">{overview.expectancy.toFixed(2)}</p></Card>
+        <Card><p className="muted text-xs">平均盈利单</p><p className="mt-1 text-2xl font-semibold stat-good">{overview.avgWinner.toFixed(2)}</p></Card>
+        <Card><p className="muted text-xs">平均亏损单</p><p className="mt-1 text-2xl font-semibold stat-bad">{overview.avgLoser.toFixed(2)}</p></Card>
+        <Card><p className="muted text-xs">盈亏比系数</p><p className="mt-1 text-2xl font-semibold">{overview.profitFactor.toFixed(2)}</p></Card>
       </div>
 
       <div className="grid gap-3 xl:grid-cols-2">
@@ -132,8 +132,8 @@ export function AnalyticsPage() {
 
       <div className="grid gap-3 xl:grid-cols-3">
         <Card><h3 className="mb-2 font-semibold">品种表现</h3><div className="h-56"><ResponsiveContainer><BarChart data={symbolData}><CartesianGrid /><XAxis dataKey="name" stroke="#9b9587" /><YAxis stroke="#9b9587" /><Tooltip {...tooltipStyle} /><Bar dataKey="pnl" fill={chartPalette.gold} /></BarChart></ResponsiveContainer></div></Card>
-        <Card><h3 className="mb-2 font-semibold">策略 / setup 表现</h3><div className="h-56"><ResponsiveContainer><BarChart data={setupData}><CartesianGrid /><XAxis dataKey="name" stroke="#9b9587" /><YAxis stroke="#9b9587" /><Tooltip {...tooltipStyle} /><Bar dataKey="pnl" fill={chartPalette.green} /></BarChart></ResponsiveContainer></div></Card>
-        <Card><h3 className="mb-2 font-semibold">mistake 表现</h3><div className="h-56"><ResponsiveContainer><BarChart data={mistakeData}><CartesianGrid /><XAxis dataKey="name" stroke="#9b9587" /><YAxis stroke="#9b9587" /><Tooltip {...tooltipStyle} /><Bar dataKey="pnl" fill={chartPalette.red} /></BarChart></ResponsiveContainer></div></Card>
+        <Card><h3 className="mb-2 font-semibold">入场形态表现</h3><div className="h-56"><ResponsiveContainer><BarChart data={setupData}><CartesianGrid /><XAxis dataKey="name" stroke="#9b9587" /><YAxis stroke="#9b9587" /><Tooltip {...tooltipStyle} /><Bar dataKey="pnl" fill={chartPalette.green} /></BarChart></ResponsiveContainer></div></Card>
+        <Card><h3 className="mb-2 font-semibold">复盘失误表现</h3><div className="h-56"><ResponsiveContainer><BarChart data={mistakeData}><CartesianGrid /><XAxis dataKey="name" stroke="#9b9587" /><YAxis stroke="#9b9587" /><Tooltip {...tooltipStyle} /><Bar dataKey="pnl" fill={chartPalette.red} /></BarChart></ResponsiveContainer></div></Card>
       </div>
 
       <div className="grid gap-3 xl:grid-cols-3">

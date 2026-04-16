@@ -22,6 +22,7 @@ export function TradesPage() {
   const [direction, setDirection] = useState<'all' | '做多' | '做空'>('all');
   const [tag, setTag] = useState('all');
   const [sortBy, setSortBy] = useState<'desc' | 'asc'>('desc');
+  const [expandedTags, setExpandedTags] = useState<Record<string, boolean>>({});
 
   const uniqueTags = useMemo(() => [...new Set(trades.flatMap((t) => t.tags || []))], [trades]);
 
@@ -73,29 +74,53 @@ export function TradesPage() {
 
       <Card>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-left text-sm">
+          <table className="w-full min-w-[1220px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--line-soft)] muted">
-                <th className="py-2">时间</th>
-                <th>标题</th>
-                <th>品种</th>
-                <th>策略</th>
-                <th>方向</th>
-                <th>盈亏</th>
-                <th>标签</th>
+                <th className="w-[110px] py-2 whitespace-nowrap">时间</th>
+                <th className="w-[240px]">标题</th>
+                <th className="w-[90px] whitespace-nowrap">品种</th>
+                <th className="w-[190px] whitespace-nowrap">策略</th>
+                <th className="w-[88px] whitespace-nowrap">方向</th>
+                <th className="w-[100px] whitespace-nowrap">盈亏</th>
+                <th className="w-[340px]">标签</th>
                 <th className="w-[290px]">操作</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((t) => (
                 <tr key={t.id} className="table-row-hover border-b border-[var(--line-soft)]">
-                  <td className="py-3">{dayjs(t.tradeDate).format('MM-DD HH:mm')}</td>
+                  <td className="py-3 whitespace-nowrap">{dayjs(t.tradeDate).format('MM-DD HH:mm')}</td>
                   <td>{t.title} {dayjs(t.updatedAt).isAfter(dayjs().subtract(2, 'day')) && <span className="ml-2 rounded bg-[#2f2718] px-1.5 py-0.5 text-xs text-[#e6d2af]">最近编辑</span>}</td>
-                  <td>{t.symbol}</td>
-                  <td>{strategies.find((s) => s.id === t.strategyId)?.name ?? '-'}</td>
-                  <td>{t.direction}</td>
-                  <td className={t.pnl >= 0 ? 'stat-good' : 'stat-bad'}>{t.pnl.toFixed(2)}</td>
-                  <td className="muted">{(t.tags || []).join(' / ') || '-'}</td>
+                  <td className="whitespace-nowrap">{t.symbol}</td>
+                  <td className="whitespace-nowrap">{strategies.find((s) => s.id === t.strategyId)?.name ?? '-'}</td>
+                  <td className="whitespace-nowrap">{t.direction}</td>
+                  <td className={`whitespace-nowrap ${t.pnl >= 0 ? 'stat-good' : 'stat-bad'}`}>{t.pnl.toFixed(2)}</td>
+                  <td className="muted">
+                    {(() => {
+                      const tags = t.tags || [];
+                      if (!tags.length) return '-';
+                      const expanded = expandedTags[t.id];
+                      const primaryTags = tags.slice(0, 3);
+                      const showTags = expanded ? tags : primaryTags;
+                      const hasMore = tags.length > primaryTags.length;
+                      return (
+                        <div className="flex items-start gap-1">
+                          <span className="leading-6">{showTags.join(' / ')}</span>
+                          {hasMore && (
+                            <button
+                              type="button"
+                              className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded border border-[var(--line-soft)] text-xs text-[var(--text-muted)] transition hover:border-[#5f5648] hover:text-[var(--text-main)]"
+                              aria-label={expanded ? '收起标签' : '展开标签'}
+                              onClick={() => setExpandedTags((prev) => ({ ...prev, [t.id]: !prev[t.id] }))}
+                            >
+                              {expanded ? '▲' : '▼'}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td className="space-x-1 py-2">
                     <Button onClick={() => setSelected(t.id)}>详情</Button>
                     <Button onClick={() => setEditing(t.id)}>编辑</Button>
