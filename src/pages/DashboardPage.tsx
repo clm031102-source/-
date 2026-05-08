@@ -23,6 +23,8 @@ export function DashboardPage() {
   const rr = (wins.length ? wins.reduce((s, t) => s + t.pnl, 0) / wins.length : 0) / (losses.length ? Math.abs(losses.reduce((s, t) => s + t.pnl, 0) / losses.length) : 1);
   const strategyPnL = useMemo(() => Object.entries(trades.reduce<Record<string, number>>((acc, t) => ((acc[t.strategyId] = (acc[t.strategyId] || 0) + t.pnl), acc), {})).map(([id, pnl]) => ({ name: strategies.find((s) => s.id === id)?.name ?? id, pnl })), [strategies, trades]);
   const anomaly = trades.filter((t) => !t.followsSystem || t.impulseTrade || t.revengeTrading).slice(0, 3);
+  const trendAlignedTrades = trades.filter((t) => t.higherTimeframeTrend?.startsWith('顺势'));
+  const triggerRecordedTrades = trades.filter((t) => Boolean(t.strategyTriggerPrice));
 
   let c = 0;
   const equity = sorted.map((t) => ({ date: dayjs(t.tradeDate).format('MM-DD'), value: (c += t.pnl) }));
@@ -31,6 +33,8 @@ export function DashboardPage() {
     last7.length ? `最近 7 天共交易 ${last7.length} 笔，累计盈亏 ${last7.reduce((s, t) => s + t.pnl, 0).toFixed(2)}。` : '最近 7 天暂无交易。',
     `系统符合度 ${(trades.length ? (trades.filter((t) => t.followsSystem).length / trades.length) * 100 : 0).toFixed(1)}%。`,
     rr >= 1 ? '当前盈亏比健康，可继续保持执行稳定。' : '盈亏比偏低，建议提升入场质量。',
+    `策略触发价填写率 ${(trades.length ? (triggerRecordedTrades.length / trades.length) * 100 : 0).toFixed(1)}%，用于复盘是否追价。`,
+    `大周期顺势占比 ${(trades.length ? (trendAlignedTrades.length / trades.length) * 100 : 0).toFixed(1)}%。`,
   ];
 
   return (
@@ -40,13 +44,15 @@ export function DashboardPage() {
         <p className="muted">最近收益概况、近期表现、异常提醒与快捷入口</p>
       </Card>
 
-      <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-8">
         <Card><p className="muted">总交易</p><p className="text-3xl font-semibold">{trades.length}</p></Card>
         <Card><p className="muted">总盈亏</p><p className={`text-3xl font-semibold ${total >= 0 ? 'stat-good' : 'stat-bad'}`}>{total.toFixed(2)}</p></Card>
         <Card><p className="muted">胜率</p><p className="text-3xl font-semibold">{trades.length ? ((wins.length / trades.length) * 100).toFixed(1) : 0}%</p></Card>
         <Card><p className="muted">盈亏比</p><p className="text-3xl font-semibold">{rr.toFixed(2)}</p></Card>
         <Card><p className="muted">近7天交易</p><p className="text-3xl font-semibold">{last7.length}</p></Card>
         <Card><p className="muted">近7天盈亏</p><p className={`text-3xl font-semibold ${last7.reduce((s, t) => s + t.pnl, 0) >= 0 ? 'stat-good' : 'stat-bad'}`}>{last7.reduce((s, t) => s + t.pnl, 0).toFixed(2)}</p></Card>
+        <Card><p className="muted">触发价填写率</p><p className="text-3xl font-semibold">{trades.length ? ((triggerRecordedTrades.length / trades.length) * 100).toFixed(0) : 0}%</p></Card>
+        <Card><p className="muted">大周期顺势</p><p className="text-3xl font-semibold">{trades.length ? ((trendAlignedTrades.length / trades.length) * 100).toFixed(0) : 0}%</p></Card>
       </div>
 
       <div className="grid gap-3 xl:grid-cols-3">
@@ -57,7 +63,7 @@ export function DashboardPage() {
       <div className="grid gap-3 xl:grid-cols-3">
         <Card>
           <h3 className="mb-2 font-semibold">最近交易</h3>
-          <div className="space-y-2 text-sm">{[...trades].sort((a, b) => dayjs(b.tradeDate).valueOf() - dayjs(a.tradeDate).valueOf()).slice(0, 6).map((t) => <div key={t.id} className="rounded-lg border border-[var(--line-soft)] p-2"><p>{t.symbol} · {t.direction} · {t.title}</p><p className="muted">{dayjs(t.tradeDate).format('MM-DD HH:mm')}</p><p className={t.pnl >= 0 ? 'stat-good' : 'stat-bad'}>{t.pnl.toFixed(2)}</p></div>)}</div>
+          <div className="space-y-2 text-sm">{[...trades].sort((a, b) => dayjs(b.tradeDate).valueOf() - dayjs(a.tradeDate).valueOf()).slice(0, 6).map((t) => <div key={t.id} className="rounded-lg border border-[var(--line-soft)] p-2"><p>{t.symbol} · {t.direction} · {t.title}</p><p className="muted">{dayjs(t.tradeDate).format('MM-DD HH:mm')} · 触发 {t.strategyTriggerPrice || '-'} · {t.higherTimeframeTrend || '趋势未填'}</p><p className={t.pnl >= 0 ? 'stat-good' : 'stat-bad'}>{t.pnl.toFixed(2)}</p></div>)}</div>
         </Card>
         <Card>
           <h3 className="mb-2 font-semibold">异常提醒</h3>
