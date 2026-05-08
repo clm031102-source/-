@@ -39,6 +39,7 @@ export function TradeForm({ initial, mode = 'detailed', onSubmitSuccess }: Props
 
   const [form, setForm] = useState({
     title: '', tradeDate: dayjs().format('YYYY-MM-DDTHH:mm'), symbol: '', direction: '做多' as Trade['direction'], strategyId: strategies[0]?.id ?? '',
+    strategyTriggerPrice: '', higherTimeframeTrend: '顺势多头' as string,
     entryPrice: '', exitPrice: '', quantity: '', leverage: '20', fee: '', stopLoss: '', takeProfit: '', actualPnl: '',
     rMultiple: '', riskRewardRatio: '', mfe: '', mae: '', holdingMinutes: '15', plannedPosition: true,
     entryReason: '', exitReason: '', followsSystem: true, signalQuality: '7', executionQuality: '7', plannedTrade: true,
@@ -59,6 +60,8 @@ export function TradeForm({ initial, mode = 'detailed', onSubmitSuccess }: Props
       symbol: initial.symbol,
       direction: initial.direction,
       strategyId: initial.strategyId,
+      strategyTriggerPrice: String(initial.strategyTriggerPrice ?? ''),
+      higherTimeframeTrend: initial.higherTimeframeTrend ?? '未确认',
       entryPrice: String(initial.entryPrice ?? ''),
       exitPrice: String(initial.exitPrice ?? ''),
       quantity: String(initial.quantity ?? ''),
@@ -157,6 +160,8 @@ export function TradeForm({ initial, mode = 'detailed', onSubmitSuccess }: Props
       symbol: form.symbol.trim().toUpperCase(),
       direction: form.direction,
       strategyId: form.strategyId,
+      strategyTriggerPrice: numOr(form.strategyTriggerPrice, 0),
+      higherTimeframeTrend: form.higherTimeframeTrend.trim(),
       setup: form.setup.trim(),
       mistakes: form.mistakes.split(',').map((x) => x.trim()).filter(Boolean),
       entryPrice: numOr(form.entryPrice, 0),
@@ -254,6 +259,8 @@ export function TradeForm({ initial, mode = 'detailed', onSubmitSuccess }: Props
           <Field label="日期时间" hint="用于时间段统计"><Input type="datetime-local" value={form.tradeDate} onChange={(e) => setForm({ ...form, tradeDate: e.target.value })} /></Field>
           <Field label="交易品种" hint="如 BTC / ETH" required><Input placeholder="填写品种代码" value={form.symbol} onChange={(e) => setForm({ ...form, symbol: e.target.value })} /></Field>
           <Field label="策略" hint="用于策略表现归因"><Select value={form.strategyId} onChange={(e) => setForm({ ...form, strategyId: e.target.value })}>{strategies.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</Select></Field>
+          <Field label="策略触发价" hint="策略条件真正触发的价格"><Input type="number" placeholder="例如 84320" value={form.strategyTriggerPrice} onChange={(e) => setForm({ ...form, strategyTriggerPrice: e.target.value })} /></Field>
+          <Field label="大周期趋势" hint="记录 1H/4H/日线环境"><Select value={form.higherTimeframeTrend} onChange={(e) => setForm({ ...form, higherTimeframeTrend: e.target.value })}><option>顺势多头</option><option>顺势空头</option><option>震荡</option><option>逆势反弹</option><option>逆势回落</option><option>未确认</option></Select></Field>
           <Field label="入场价"><Input type="number" placeholder="例如 84250" value={form.entryPrice} onChange={(e) => setForm({ ...form, entryPrice: e.target.value })} /></Field>
           <Field label="出场价"><Input type="number" placeholder="例如 84590" value={form.exitPrice} onChange={(e) => setForm({ ...form, exitPrice: e.target.value })} /></Field>
           <Field label="数量"><Input type="number" placeholder="例如 0.7" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} /></Field>
@@ -267,11 +274,13 @@ export function TradeForm({ initial, mode = 'detailed', onSubmitSuccess }: Props
 
       <Card>
         <h3 className="mb-2 text-lg font-semibold">实时盈亏摘要</h3>
-        <div className="grid gap-2 md:grid-cols-4">
+        <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-6">
           <Input readOnly value={`预估盈亏：${pnl === null ? '待输入' : pnl.toFixed(2)}`} className={pnl !== null ? (pnl >= 0 ? 'stat-good' : 'stat-bad') : ''} />
           <Input readOnly value={`盈亏比例：${pnlPercent === null ? '待输入' : `${pnlPercent.toFixed(2)}%`}`} className={pnlPercent !== null ? (pnlPercent >= 0 ? 'stat-good' : 'stat-bad') : ''} />
           <Input readOnly value={`R倍数：${form.rMultiple || '待输入'}`} />
           <Input readOnly value={`风险回报比：${form.riskRewardRatio || '待输入'}`} />
+          <Input readOnly value={`策略触发价：${form.strategyTriggerPrice || '待输入'}`} />
+          <Input readOnly value={`大周期趋势：${form.higherTimeframeTrend || '未确认'}`} />
         </div>
       </Card>
 
@@ -297,6 +306,8 @@ export function TradeForm({ initial, mode = 'detailed', onSubmitSuccess }: Props
               <Field label="信号质量评分"><Input type="number" min={1} max={10} placeholder="1-10" value={form.signalQuality} onChange={(e) => setForm({ ...form, signalQuality: e.target.value })} /></Field>
               <Field label="执行质量评分"><Input type="number" min={1} max={10} placeholder="1-10" value={form.executionQuality} onChange={(e) => setForm({ ...form, executionQuality: e.target.value })} /></Field>
               <Field label="Setup" hint="本笔交易使用的模式/形态"><Input placeholder="如：1H 突破回踩" value={form.setup} onChange={(e) => setForm({ ...form, setup: e.target.value })} /></Field>
+              <Field label="触发价复核" hint="对比触发价与入场价，复盘是否追价"><Input readOnly value={form.strategyTriggerPrice && form.entryPrice ? `偏离 ${Number(numOr(form.entryPrice) - numOr(form.strategyTriggerPrice)).toFixed(2)}` : '待输入触发价与入场价'} /></Field>
+              <Field label="大周期结论" hint="辅助判断顺逆势质量"><Input readOnly value={form.higherTimeframeTrend || '未确认'} /></Field>
               <Field label="Mistakes" hint="用逗号分隔多个错误归因"><Input placeholder="如：追单, 入场过早" value={form.mistakes} onChange={(e) => setForm({ ...form, mistakes: e.target.value })} /></Field>
               <Field label="入场理由"><Textarea placeholder="写清触发条件与确认点" value={form.entryReason} onChange={(e) => setForm({ ...form, entryReason: e.target.value })} /></Field>
               <Field label="出场理由"><Textarea placeholder="止盈 / 止损 / 主动离场原因" value={form.exitReason} onChange={(e) => setForm({ ...form, exitReason: e.target.value })} /></Field>
@@ -369,7 +380,7 @@ export function TradeForm({ initial, mode = 'detailed', onSubmitSuccess }: Props
         <Button variant="primary" onClick={submit}>保存记录</Button>
         {!initial && <Button variant="secondary" onClick={() => { localStorage.setItem(draftKey, JSON.stringify(form)); push('草稿已手动保存。'); }}>保存草稿</Button>}
         {!initial && <Button variant="secondary" onClick={() => { const cache = localStorage.getItem(draftKey); if (!cache) return push('暂无草稿。'); setForm((prev) => ({ ...prev, ...JSON.parse(cache) })); push('草稿已恢复。'); }}>恢复草稿</Button>}
-        {!initial && <Button variant="ghost" onClick={() => { localStorage.removeItem(draftKey); setForm((prev) => ({ ...prev, title: '', symbol: '', entryPrice: '', exitPrice: '', quantity: '', fee: '', stopLoss: '', takeProfit: '' })); push('已清空核心字段与草稿。'); }}>清空草稿/核心字段</Button>}
+        {!initial && <Button variant="ghost" onClick={() => { localStorage.removeItem(draftKey); setForm((prev) => ({ ...prev, title: '', symbol: '', strategyTriggerPrice: '', higherTimeframeTrend: '未确认', entryPrice: '', exitPrice: '', quantity: '', fee: '', stopLoss: '', takeProfit: '' })); push('已清空核心字段与草稿。'); }}>清空草稿/核心字段</Button>}
       </div>
     </div>
   );

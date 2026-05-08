@@ -30,6 +30,8 @@ export interface Trade {
   symbol: string;
   direction: Direction;
   strategyId: string;
+  strategyTriggerPrice?: number;
+  higherTimeframeTrend?: string;
   setup?: string;
   mistakes?: string[];
 

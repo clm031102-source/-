@@ -30,13 +30,14 @@ function byGroup(trades: Trade[], key: (t: Trade) => string) {
 
 export function AnalyticsPage() {
   const { trades, strategies } = useJournalStore();
-  const [filters, setFilters] = useState({ strategy: 'all', symbol: 'all', setup: 'all', mistake: 'all', direction: 'all', tag: 'all', emotion: 'all', follows: 'all', from: '', to: '' });
+  const [filters, setFilters] = useState({ strategy: 'all', symbol: 'all', setup: 'all', mistake: 'all', direction: 'all', tag: 'all', trend: 'all', emotion: 'all', follows: 'all', from: '', to: '' });
   const [showFilters, setShowFilters] = useState(false);
 
   const uniqueSymbols = [...new Set(trades.map((t) => t.symbol))];
   const uniqueTags = [...new Set(trades.flatMap((t) => t.tags || []))];
   const uniqueSetups = [...new Set(trades.map((t) => t.setup).filter(Boolean) as string[])];
   const uniqueMistakes = [...new Set(trades.flatMap((t) => t.mistakes ?? []))];
+  const uniqueTrends = [...new Set(trades.map((t) => t.higherTimeframeTrend).filter(Boolean) as string[])];
 
   const filtered = useMemo(() => trades
     .filter((t) => (filters.strategy === 'all' ? true : t.strategyId === filters.strategy))
@@ -45,6 +46,7 @@ export function AnalyticsPage() {
     .filter((t) => (filters.mistake === 'all' ? true : (t.mistakes ?? []).includes(filters.mistake)))
     .filter((t) => (filters.direction === 'all' ? true : t.direction === filters.direction))
     .filter((t) => (filters.tag === 'all' ? true : (t.tags || []).includes(filters.tag)))
+    .filter((t) => (filters.trend === 'all' ? true : t.higherTimeframeTrend === filters.trend))
     .filter((t) => (filters.emotion === 'all' ? true : t.emotion === filters.emotion))
     .filter((t) => (filters.follows === 'all' ? true : String(t.followsSystem) === filters.follows))
     .filter((t) => (filters.from ? dayjs(t.tradeDate).isAfter(dayjs(filters.from).subtract(1, 'day')) : true))
@@ -79,6 +81,14 @@ export function AnalyticsPage() {
   const setupData = useMemo(() => byGroup(filtered, (t) => t.setup || '未填写setup'), [filtered]);
   const mistakeData = useMemo(() => byGroup(filtered.flatMap((t) => (t.mistakes ?? []).map((m) => ({ ...t, _mistake: m } as Trade & { _mistake: string }))), (t) => (t as Trade & { _mistake: string })._mistake || '未归因'), [filtered]);
   const directionData = useMemo(() => byGroup(filtered, (t) => t.direction), [filtered]);
+  const trendData = useMemo(() => byGroup(filtered, (t) => t.higherTimeframeTrend || '未填写趋势'), [filtered]);
+  const triggerQualityData = useMemo(() => byGroup(filtered, (t) => {
+    if (!t.strategyTriggerPrice) return '未填写触发价';
+    const diffPercent = Math.abs((t.entryPrice - t.strategyTriggerPrice) / t.strategyTriggerPrice) * 100;
+    if (diffPercent <= 0.1) return '贴近触发';
+    if (diffPercent <= 0.5) return '轻微偏离';
+    return '明显追价';
+  }), [filtered]);
   const emotionData = useMemo(() => byGroup(filtered.filter((t) => Boolean(t.emotion)), (t) => t.emotion), [filtered]);
   const weekdayData = useMemo(() => weekdays.map((day, i) => {
     const arr = filtered.filter((t) => dayjs(t.tradeDate).day() === i);
@@ -90,7 +100,7 @@ export function AnalyticsPage() {
       <Card className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold gold-text">统计分析</h2>
-          <p className="muted">按品种、策略、入场形态、复盘失误、方向、情绪与时间拆解盈亏来源</p>
+          <p className="muted">按品种、策略、触发价执行、大周期趋势、入场形态、复盘失误、方向、情绪与时间拆解盈亏来源</p>
         </div>
         <div className="flex items-center gap-3">
           <p className="text-sm muted">当前数据范围：{filtered.length} 笔</p>
@@ -100,17 +110,18 @@ export function AnalyticsPage() {
 
       {showFilters && (
         <Card>
-          <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-10">
+          <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-11">
             <Select value={filters.symbol} onChange={(e) => setFilters({ ...filters, symbol: e.target.value })}><option value="all">全部品种</option>{uniqueSymbols.map((s) => <option key={s}>{s}</option>)}</Select>
             <Select value={filters.strategy} onChange={(e) => setFilters({ ...filters, strategy: e.target.value })}><option value="all">全部策略</option>{strategies.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</Select>
             <Select value={filters.setup} onChange={(e) => setFilters({ ...filters, setup: e.target.value })}><option value="all">全部入场形态</option>{uniqueSetups.map((s) => <option key={s}>{s}</option>)}</Select>
             <Select value={filters.mistake} onChange={(e) => setFilters({ ...filters, mistake: e.target.value })}><option value="all">全部复盘失误</option>{uniqueMistakes.map((s) => <option key={s}>{s}</option>)}</Select>
             <Select value={filters.direction} onChange={(e) => setFilters({ ...filters, direction: e.target.value })}><option value="all">全部方向</option><option>做多</option><option>做空</option></Select>
             <Select value={filters.tag} onChange={(e) => setFilters({ ...filters, tag: e.target.value })}><option value="all">全部标签</option>{uniqueTags.map((t) => <option key={t}>{t}</option>)}</Select>
+            <Select value={filters.trend} onChange={(e) => setFilters({ ...filters, trend: e.target.value })}><option value="all">全部大周期趋势</option>{uniqueTrends.map((t) => <option key={t}>{t}</option>)}</Select>
             <Select value={filters.follows} onChange={(e) => setFilters({ ...filters, follows: e.target.value })}><option value="all">系统符合度</option><option value="true">符合系统</option><option value="false">不符合系统</option></Select>
             <Select value={filters.emotion} onChange={(e) => setFilters({ ...filters, emotion: e.target.value })}><option value="all">全部情绪</option><option>冷静</option><option>专注</option><option>犹豫</option><option>焦虑</option><option>上头</option><option>报复性交易</option></Select>
             <Input type="date" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} />
-            <div className="flex gap-2"><Input type="date" value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} /><Button variant="ghost" onClick={() => setFilters({ strategy: 'all', symbol: 'all', setup: 'all', mistake: 'all', direction: 'all', tag: 'all', emotion: 'all', follows: 'all', from: '', to: '' })}>重置</Button></div>
+            <div className="flex gap-2"><Input type="date" value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} /><Button variant="ghost" onClick={() => setFilters({ strategy: 'all', symbol: 'all', setup: 'all', mistake: 'all', direction: 'all', tag: 'all', trend: 'all', emotion: 'all', follows: 'all', from: '', to: '' })}>重置</Button></div>
           </div>
         </Card>
       )}
@@ -133,6 +144,11 @@ export function AnalyticsPage() {
       <div className="grid gap-3 xl:grid-cols-3">
         <Card><h3 className="mb-2 font-semibold">品种表现</h3><div className="h-56"><ResponsiveContainer><BarChart data={symbolData}><CartesianGrid /><XAxis dataKey="name" stroke="#9b9587" /><YAxis stroke="#9b9587" /><Tooltip {...tooltipStyle} /><Bar dataKey="pnl" fill={chartPalette.gold} /></BarChart></ResponsiveContainer></div></Card>
         <Card><h3 className="mb-2 font-semibold">入场形态表现</h3><div className="h-56"><ResponsiveContainer><BarChart data={setupData}><CartesianGrid /><XAxis dataKey="name" stroke="#9b9587" /><YAxis stroke="#9b9587" /><Tooltip {...tooltipStyle} /><Bar dataKey="pnl" fill={chartPalette.green} /></BarChart></ResponsiveContainer></div></Card>
+        <Card><h3 className="mb-2 font-semibold">大周期趋势表现</h3><div className="h-56"><ResponsiveContainer><BarChart data={trendData}><CartesianGrid /><XAxis dataKey="name" stroke="#9b9587" /><YAxis stroke="#9b9587" /><Tooltip {...tooltipStyle} /><Bar dataKey="pnl" fill={chartPalette.gold} /></BarChart></ResponsiveContainer></div></Card>
+      </div>
+
+      <div className="grid gap-3 xl:grid-cols-3">
+        <Card><h3 className="mb-2 font-semibold">触发价执行质量</h3><div className="h-56"><ResponsiveContainer><BarChart data={triggerQualityData}><CartesianGrid /><XAxis dataKey="name" stroke="#9b9587" /><YAxis stroke="#9b9587" /><Tooltip {...tooltipStyle} /><Bar dataKey="pnl" fill={chartPalette.green} /></BarChart></ResponsiveContainer></div></Card>
         <Card><h3 className="mb-2 font-semibold">复盘失误表现</h3><div className="h-56"><ResponsiveContainer><BarChart data={mistakeData}><CartesianGrid /><XAxis dataKey="name" stroke="#9b9587" /><YAxis stroke="#9b9587" /><Tooltip {...tooltipStyle} /><Bar dataKey="pnl" fill={chartPalette.red} /></BarChart></ResponsiveContainer></div></Card>
       </div>
 

@@ -21,10 +21,12 @@ export function TradesPage() {
   const [strategy, setStrategy] = useState('all');
   const [direction, setDirection] = useState<'all' | '做多' | '做空'>('all');
   const [tag, setTag] = useState('all');
+  const [trend, setTrend] = useState('all');
   const [sortBy, setSortBy] = useState<'desc' | 'asc'>('desc');
   const [expandedTags, setExpandedTags] = useState<Record<string, boolean>>({});
 
   const uniqueTags = useMemo(() => [...new Set(trades.flatMap((t) => t.tags || []))], [trades]);
+  const uniqueTrends = useMemo(() => [...new Set(trades.map((t) => t.higherTimeframeTrend).filter(Boolean) as string[])], [trades]);
 
   const filtered = useMemo(() => {
     const q = norm(keyword);
@@ -32,6 +34,7 @@ export function TradesPage() {
       .filter((t) => (strategy === 'all' ? true : t.strategyId === strategy))
       .filter((t) => (direction === 'all' ? true : t.direction === direction))
       .filter((t) => (tag === 'all' ? true : (t.tags ?? []).includes(tag)))
+      .filter((t) => (trend === 'all' ? true : t.higherTimeframeTrend === trend))
       .filter((t) => {
         if (!q) return true;
         return norm(t.title).includes(q) || norm(t.symbol).includes(q);
@@ -40,7 +43,7 @@ export function TradesPage() {
         const diff = dayjs(a.tradeDate).valueOf() - dayjs(b.tradeDate).valueOf();
         return sortBy === 'desc' ? -diff : diff;
       });
-  }, [direction, keyword, sortBy, strategy, tag, trades]);
+  }, [direction, keyword, sortBy, strategy, tag, trend, trades]);
 
   const selectedTrade = trades.find((t) => t.id === selected) ?? null;
   const editingTrade = trades.find((t) => t.id === editing) ?? null;
@@ -66,6 +69,10 @@ export function TradesPage() {
             <Select value={tag} onChange={(e) => setTag(e.target.value)}><option value="all">全部标签</option>{uniqueTags.map((x) => <option key={x}>{x}</option>)}</Select>
           </div>
           <div className="w-44">
+            <p className="mb-1 text-sm muted">大周期趋势</p>
+            <Select value={trend} onChange={(e) => setTrend(e.target.value)}><option value="all">全部趋势</option>{uniqueTrends.map((x) => <option key={x}>{x}</option>)}</Select>
+          </div>
+          <div className="w-44">
             <p className="mb-1 text-sm muted">时间排序</p>
             <Select value={sortBy} onChange={(e) => setSortBy(e.target.value as 'desc' | 'asc')}><option value="desc">最新优先</option><option value="asc">最早优先</option></Select>
           </div>
@@ -74,7 +81,7 @@ export function TradesPage() {
 
       <Card>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1220px] text-left text-sm">
+          <table className="w-full min-w-[1480px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--line-soft)] muted">
                 <th className="w-[110px] py-2 whitespace-nowrap">时间</th>
@@ -82,6 +89,8 @@ export function TradesPage() {
                 <th className="w-[90px] whitespace-nowrap">品种</th>
                 <th className="w-[190px] whitespace-nowrap">策略</th>
                 <th className="w-[88px] whitespace-nowrap">方向</th>
+                <th className="w-[100px] whitespace-nowrap">触发价</th>
+                <th className="w-[130px] whitespace-nowrap">大周期趋势</th>
                 <th className="w-[100px] whitespace-nowrap">盈亏</th>
                 <th className="w-[340px]">标签</th>
                 <th className="w-[290px]">操作</th>
@@ -95,6 +104,8 @@ export function TradesPage() {
                   <td className="whitespace-nowrap">{t.symbol}</td>
                   <td className="whitespace-nowrap">{strategies.find((s) => s.id === t.strategyId)?.name ?? '-'}</td>
                   <td className="whitespace-nowrap">{t.direction}</td>
+                  <td className="whitespace-nowrap">{t.strategyTriggerPrice || '-'}</td>
+                  <td className="whitespace-nowrap">{t.higherTimeframeTrend || '-'}</td>
                   <td className={`whitespace-nowrap ${t.pnl >= 0 ? 'stat-good' : 'stat-bad'}`}>{t.pnl.toFixed(2)}</td>
                   <td className="muted">
                     {(() => {

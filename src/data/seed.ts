@@ -38,7 +38,7 @@ export const seedTrades: Trade[] = [
   {
     id: 't-1', title: 'BTC 1m 突破跟进', tradeDate: now.subtract(1, 'day').hour(10).minute(0).toISOString(), symbol: 'BTC', direction: '做多',
     entryPrice: 84250, exitPrice: 84590, quantity: 0.7, leverage: 20, fee: 4, pnl: 232, pnlPercent: 1.9, stopLoss: 84080, takeProfit: 84590,
-    strategyId: 'st-1', followsSystem: true, entryReason: '突破区间后回踩不破，动量增强。', exitReason: '触达 2R 目标位。',
+    strategyId: 'st-1', strategyTriggerPrice: 84220, higherTimeframeTrend: '顺势多头', followsSystem: true, entryReason: '突破区间后回踩不破，动量增强。', exitReason: '触达 2R 目标位。',
     tags: ['计划内', 'A+机会'], emotion: '冷静', review: '执行到位，止盈节奏良好。', holdingMinutes: 28,
     plannedTrade: true, setup: '突破回踩确认', mistakes: ['入场偏慢'], opportunityGrade: 'A+', systemType: '系统单', planType: '计划内', signalQuality: 9, executionQuality: 8,
     whatWentWell: '严格执行系统。', biggestMistake: '入场略慢。', nextTimePlan: '加快执行。',
@@ -48,14 +48,14 @@ export const seedTrades: Trade[] = [
   {
     id: 't-2', title: 'ETH 回调低吸失败', tradeDate: now.subtract(2, 'day').hour(14).minute(20).toISOString(), symbol: 'ETH', direction: '做多',
     entryPrice: 3020, exitPrice: 2990, quantity: 5, leverage: 10, fee: 3, pnl: -156, pnlPercent: -1.2, stopLoss: 2988, takeProfit: 3078,
-    strategyId: 'st-2', followsSystem: true, entryReason: '回调到支撑位，尝试低吸。', exitReason: '跌破结构低点，执行止损。',
+    strategyId: 'st-2', strategyTriggerPrice: 3018, higherTimeframeTrend: '震荡', followsSystem: true, entryReason: '回调到支撑位，尝试低吸。', exitReason: '跌破结构低点，执行止损。',
     tags: ['计划内'], emotion: '犹豫', review: '入场略早，确认不足。', holdingMinutes: 17, plannedTrade: true, setup: '回调低吸', mistakes: ['确认不足'], attachments: [],
     createdAt: now.toISOString(), updatedAt: now.toISOString(),
   },
   {
     id: 't-3', title: 'SOL 反转试单', tradeDate: now.subtract(6, 'day').hour(9).minute(5).toISOString(), symbol: 'SOL', direction: '做空',
     entryPrice: 182.2, exitPrice: 176.3, quantity: 80, leverage: 15, fee: 5, pnl: 467, pnlPercent: 3.2, stopLoss: 184, takeProfit: 176,
-    strategyId: 'st-3', followsSystem: false, entryReason: '情绪过热后首根衰竭K。', exitReason: '接近日内支撑，主动止盈。',
+    strategyId: 'st-3', strategyTriggerPrice: 181.8, higherTimeframeTrend: '逆势回落', followsSystem: false, entryReason: '情绪过热后首根衰竭K。', exitReason: '接近日内支撑，主动止盈。',
     tags: ['冲动交易'], emotion: '上头', review: '收益不错但并非系统内。', holdingMinutes: 34, plannedTrade: false, setup: '反转试单', mistakes: ['冲动开单'],
     impulseTrade: true, revengeTrading: false, attachments: [],
     createdAt: now.toISOString(), updatedAt: now.toISOString(),

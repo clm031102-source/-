@@ -28,6 +28,7 @@ export function TradeDetailPanel({ trade }: { trade: Trade }) {
         <Card className="space-y-1">
           <h5 className="font-semibold">核心成交信息</h5>
           <p>策略：{strategy?.name ?? '-'} · Setup：{trade.setup || '-'}</p>
+          <p>策略触发价：{trade.strategyTriggerPrice || '-'} · 大周期趋势：{trade.higherTimeframeTrend || '-'}</p>
           <p>入场/出场：{trade.entryPrice} → {trade.exitPrice}</p>
           <p>数量：{trade.quantity} · 杠杆：{trade.leverage}x · 手续费：{trade.fee}</p>
           <p>止损/止盈：{trade.stopLoss} / {trade.takeProfit}</p>
@@ -52,6 +53,7 @@ export function TradeDetailPanel({ trade }: { trade: Trade }) {
           <p>Mistakes：{(trade.mistakes ?? []).join(' / ') || trade.biggestMistake || '-'}</p>
           <p>标签：{(trade.tags ?? []).join(' / ') || '-'}</p>
           <p>机会等级：{trade.opportunityGrade ?? '-'} · 分类：{trade.systemType ?? '-'} / {trade.planType ?? '-'}</p>
+          <p>入场偏离：{trade.strategyTriggerPrice ? `${(trade.entryPrice - trade.strategyTriggerPrice).toFixed(2)}` : '-'} · 趋势一致性：{trade.higherTimeframeTrend?.startsWith('顺势') ? '顺势' : trade.higherTimeframeTrend || '-'}</p>
         </Card>
 
         <Card className="space-y-1">
