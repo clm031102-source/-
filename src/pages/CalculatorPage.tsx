@@ -148,6 +148,7 @@ export function CalculatorPage() {
   const [balanceOn, setBalanceOn] = useState(false);
   const [balance, setBalance] = useState('');
   const [customR, setCustomR] = useState('1.55');
+  const [customRDraft, setCustomRDraft] = useState('1.55');
 
   const [calc, setCalc] = useState<CalcResult | null>(null);
   const [status, setStatus] = useState('请填写入场价、止损和风险参数。');
@@ -162,6 +163,7 @@ export function CalculatorPage() {
   }, [params, push]);
 
   useEffect(() => { runCalc(true); }, [runCalc]);
+  useEffect(() => { setCustomRDraft(customR); }, [customR]);
 
   return (
     <div className="space-y-3" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); runCalc(false); } }}>
@@ -213,8 +215,15 @@ export function CalculatorPage() {
         )}
 
         <div className="grid gap-2 md:grid-cols-[1fr_auto]">
-          <Input value={customR} onChange={(e) => setCustomR(e.target.value)} placeholder="可调盈亏比（默认 1.55R）" />
-          <Button variant="secondary" onClick={() => setCustomR('1.55')}>重置为 1.55R</Button>
+          <Input value={customRDraft} onChange={(e) => setCustomRDraft(e.target.value)} placeholder="可调盈亏比（默认 1.55R）" />
+          <Button variant="secondary" onClick={() => {
+            const next = toNum(customRDraft);
+            if (!Number.isFinite(next) || next <= 0) {
+              push('请输入大于 0 的有效盈亏比。');
+              return;
+            }
+            setCustomR(String(next));
+          }}>设置自定义盈亏比</Button>
         </div>
 
         <div className="grid gap-2 md:grid-cols-3">
