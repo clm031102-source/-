@@ -147,7 +147,7 @@ export function CalculatorPage() {
   const [slippagePercent, setSlippagePercent] = useState('0.02');
   const [balanceOn, setBalanceOn] = useState(false);
   const [balance, setBalance] = useState('');
-  const [customR, setCustomR] = useState('3');
+  const [customR, setCustomR] = useState('1.55');
 
   const [calc, setCalc] = useState<CalcResult | null>(null);
   const [status, setStatus] = useState('请填写入场价、止损和风险参数。');
@@ -212,6 +212,11 @@ export function CalculatorPage() {
           </Card>
         )}
 
+        <div className="grid gap-2 md:grid-cols-[1fr_auto]">
+          <Input value={customR} onChange={(e) => setCustomR(e.target.value)} placeholder="可调盈亏比（默认 1.55R）" />
+          <Button variant="secondary" onClick={() => setCustomR('1.55')}>重置为 1.55R</Button>
+        </div>
+
         <div className="grid gap-2 md:grid-cols-3">
           <Input readOnly value={`止损距离：${calc ? fmt(calc.dist, 6) : '--'}`} />
           <Input readOnly value={`止损百分比：${calc ? fmt(calc.slPercent * 100, 3) : '--'}%`} />
@@ -221,7 +226,7 @@ export function CalculatorPage() {
           <Input readOnly value={`建议保证金：${calc ? fmt(calc.margin, 2) : '--'} U`} className={balanceOn && calc && toNum(balance) < calc.margin ? 'stat-bad' : ''} />
           <Input readOnly value={`可开数量：${calc ? fmt(calc.qty, 6) : '--'}`} />
           <Input readOnly value={`预计亏损：${calc ? fmt(calc.stopLossAmount, 2) : '--'} U`} />
-          <Input readOnly value={calc ? calc.targets.map((t) => `${t.r}R:${fmt(t.price, 4)}`).join(' / ') : '目标位（1R / 1.5R / 2R / 自定义R）'} />
+          <Input readOnly value={calc ? calc.targets.map((t) => `${t.r}R:${fmt(t.price, 4)}`).join(' / ') : '目标位（1R / 1.5R / 1.55R / 2R）'} />
         </div>
 
         {balanceOn && calc && Number.isFinite(toNum(balance)) && toNum(balance) < calc.margin && <p className="stat-bad text-sm">所需保证金超过可用余额，当前设置下无法开仓。</p>}

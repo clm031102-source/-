@@ -30,7 +30,7 @@ const initialAdvanced: AdvancedSettings = {
   slippagePercent: 0.02,
   balanceCheckEnabled: false,
   availableBalance: '',
-  customR: 3,
+  customR: 1.55,
 };
 
 const initialInputs: CalculatorInputs = {
