@@ -7,6 +7,29 @@ import { useToast } from '@/hooks/useToast';
 
 const toNum = (v: string) => (v === '' ? NaN : Number(v));
 const fmt = (n: number, d = 4) => (Number.isFinite(n) ? n.toLocaleString('zh-CN', { maximumFractionDigits: d }) : '--');
+const fmtFixed = (n: number, d: number) => (Number.isFinite(n) ? n.toLocaleString('zh-CN', { minimumFractionDigits: d, maximumFractionDigits: d }) : '--');
+
+const DECIMALS = {
+  price: 6,
+  percent: 3,
+  amount: 2,
+  leverage: 0,
+  ratio: 2,
+} as const;
+
+/** Keeps every calculator number field within its documented precision while typing. */
+function limitDecimal(value: string, digits: number) {
+  const normalized = value.replace(/[^\d.]/g, '');
+  const [whole = '', ...fractionParts] = normalized.split('.');
+  const fraction = fractionParts.join('').slice(0, digits);
+  if (digits === 0) return whole;
+  return fractionParts.length > 0 ? `${whole}.${fraction}` : whole;
+}
+
+function editableNumber(value: number, digits: number) {
+  if (!Number.isFinite(value)) return '';
+  return Number(value.toFixed(digits)).toString();
+}
 
 type CalcResult = {
   slPercent: number;
@@ -72,13 +95,14 @@ function compute(params: {
   return { result, message: '' };
 }
 
-function PresetBar({ label, unit, values, active, setActive, onChange }: {
+function PresetBar({ label, unit, values, active, setActive, onChange, decimalPlaces }: {
   label: string;
   unit: string;
   values: number[];
   active: number;
   setActive: (n: number) => void;
   onChange: (n: number[]) => void;
+  decimalPlaces: number;
 }) {
   const [custom, setCustom] = useState('');
   const [editing, setEditing] = useState(false);
@@ -94,11 +118,11 @@ function PresetBar({ label, unit, values, active, setActive, onChange }: {
         <div className="grid gap-2 md:grid-cols-[1fr_1fr_1fr_220px]">
           {[...values, 0, 0, 0].slice(0, 3).map((v, i) => (
             <button key={`${i}-${v}`} className={`rounded-xl border px-4 py-2 text-lg ${active === v ? 'border-[#8b6e43] bg-[#2c261d] text-[#efd9b3]' : 'border-[var(--line-soft)] bg-[#131313]'}`} onClick={() => setActive(v)}>
-              {v}{unit}
+              {fmt(v, decimalPlaces)}{unit}
             </button>
           ))}
           <div className="flex gap-2">
-            <Input value={custom} placeholder={`输入自定义${unit}`} onChange={(e) => setCustom(e.target.value)} />
+            <Input inputMode={decimalPlaces ? 'decimal' : 'numeric'} value={custom} placeholder={`输入自定义${unit}`} onChange={(e) => setCustom(limitDecimal(e.target.value, decimalPlaces))} />
             <Button onClick={() => { const n = toNum(custom); if (!Number.isFinite(n) || n <= 0) return; setActive(n); }}>应用</Button>
           </div>
         </div>
@@ -106,8 +130,8 @@ function PresetBar({ label, unit, values, active, setActive, onChange }: {
         <Card className="space-y-2">
           {values.map((v, i) => (
             <div key={`${v}-${i}`} className="grid grid-cols-[1fr_auto_auto] items-center gap-2">
-              <Input value={String(v)} onChange={(e) => {
-                const n = toNum(e.target.value);
+              <Input inputMode={decimalPlaces ? 'decimal' : 'numeric'} value={editableNumber(v, decimalPlaces)} onChange={(e) => {
+                const n = toNum(limitDecimal(e.target.value, decimalPlaces));
                 const next = [...values];
                 next[i] = Number.isFinite(n) && n > 0 ? n : 0;
                 onChange(next.filter((x) => x > 0));
@@ -121,7 +145,7 @@ function PresetBar({ label, unit, values, active, setActive, onChange }: {
               }}>删除</Button>
             </div>
           ))}
-          <div className="flex gap-2"><Input value={custom} placeholder="新增预设值" onChange={(e) => setCustom(e.target.value)} /><Button onClick={() => { const n = toNum(custom); if (!Number.isFinite(n) || n <= 0) return; onChange([...values, n]); setCustom(''); }}>新增预设</Button></div>
+          <div className="flex gap-2"><Input inputMode={decimalPlaces ? 'decimal' : 'numeric'} value={custom} placeholder="新增预设值" onChange={(e) => setCustom(limitDecimal(e.target.value, decimalPlaces))} /><Button onClick={() => { const n = toNum(custom); if (!Number.isFinite(n) || n <= 0) return; onChange([...values, n]); setCustom(''); }}>新增预设</Button></div>
         </Card>
       )}
     </div>
@@ -184,10 +208,10 @@ export function CalculatorPage() {
         </div>
 
         <div className="grid gap-2 md:grid-cols-4">
-          <Input value={entryPrice} onChange={(e) => setEntryPrice(e.target.value)} placeholder="入场价" />
-          {stopMode === 'price' ? <Input value={stopPrice} onChange={(e) => setStopPrice(e.target.value)} placeholder="止损价" /> : <Input value={stopPercent} onChange={(e) => setStopPercent(e.target.value)} placeholder="止损百分比%" />}
-          <Input value={String(riskAmount)} onChange={(e) => setRiskAmount(Math.max(0, toNum(e.target.value) || 0))} placeholder="单笔风险U" />
-          <Input value={String(leverage)} onChange={(e) => setLeverage(Math.max(1, toNum(e.target.value) || 1))} placeholder="杠杆" />
+          <Input inputMode="decimal" value={entryPrice} onChange={(e) => setEntryPrice(limitDecimal(e.target.value, DECIMALS.price))} placeholder="入场价（最多 6 位小数）" />
+          {stopMode === 'price' ? <Input inputMode="decimal" value={stopPrice} onChange={(e) => setStopPrice(limitDecimal(e.target.value, DECIMALS.price))} placeholder="止损价（最多 6 位小数）" /> : <Input inputMode="decimal" value={stopPercent} onChange={(e) => setStopPercent(limitDecimal(e.target.value, DECIMALS.percent))} placeholder="止损百分比（最多 3 位小数）" />}
+          <Input inputMode="decimal" value={editableNumber(riskAmount, DECIMALS.amount)} onChange={(e) => setRiskAmount(Math.max(0, toNum(limitDecimal(e.target.value, DECIMALS.amount)) || 0))} placeholder="单笔风险U（最多 2 位小数）" />
+          <Input inputMode="numeric" value={editableNumber(leverage, DECIMALS.leverage)} onChange={(e) => setLeverage(Math.max(1, toNum(limitDecimal(e.target.value, DECIMALS.leverage)) || 1))} placeholder="杠杆（整数）" />
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -195,27 +219,27 @@ export function CalculatorPage() {
           <p className={`text-sm ${calc ? 'muted' : 'stat-bad'}`}>{status}</p>
         </div>
 
-        <PresetBar label="固定风险预设" unit="U" values={presetConfig.riskPresets} active={riskAmount} setActive={setRiskAmount} onChange={setRiskPresets} />
-        <PresetBar label="杠杆预设" unit="x" values={presetConfig.leveragePresets} active={leverage} setActive={setLeverage} onChange={setLeveragePresets} />
+        <PresetBar label="固定风险预设" unit="U" values={presetConfig.riskPresets} active={riskAmount} setActive={setRiskAmount} onChange={setRiskPresets} decimalPlaces={DECIMALS.amount} />
+        <PresetBar label="杠杆预设" unit="x" values={presetConfig.leveragePresets} active={leverage} setActive={setLeverage} onChange={setLeveragePresets} decimalPlaces={DECIMALS.leverage} />
 
         {showAdvanced && (
           <Card className="space-y-2">
             <h3 className="text-lg font-semibold">高级模式</h3>
             <div className="grid gap-2 md:grid-cols-4">
               <Button variant={feeOn ? 'primary' : 'secondary'} onClick={() => setFeeOn((v) => !v)}>手续费修正</Button>
-              <Input value={feePercent} onChange={(e) => setFeePercent(e.target.value)} placeholder="手续费%" />
+              <Input inputMode="decimal" value={feePercent} onChange={(e) => setFeePercent(limitDecimal(e.target.value, DECIMALS.percent))} placeholder="手续费%（最多 3 位小数）" />
               <Button variant={slippageOn ? 'primary' : 'secondary'} onClick={() => setSlippageOn((v) => !v)}>滑点修正</Button>
-              <Input value={slippagePercent} onChange={(e) => setSlippagePercent(e.target.value)} placeholder="滑点%" />
+              <Input inputMode="decimal" value={slippagePercent} onChange={(e) => setSlippagePercent(limitDecimal(e.target.value, DECIMALS.percent))} placeholder="滑点%（最多 3 位小数）" />
               <Button variant={balanceOn ? 'primary' : 'secondary'} onClick={() => setBalanceOn((v) => !v)}>余额校验</Button>
-              <Input value={balance} onChange={(e) => setBalance(e.target.value)} placeholder="可用余额" />
-              <Input value={customR} onChange={(e) => setCustomR(e.target.value)} placeholder="自定义R" />
+              <Input inputMode="decimal" value={balance} onChange={(e) => setBalance(limitDecimal(e.target.value, DECIMALS.amount))} placeholder="可用余额（最多 2 位小数）" />
+              <Input inputMode="decimal" value={customR} onChange={(e) => setCustomR(limitDecimal(e.target.value, DECIMALS.ratio))} placeholder="自定义R（最多 2 位小数）" />
               <Input readOnly value={calc ? `修正后总风险 ${(calc.effectiveRisk * 100).toFixed(3)}%` : '等待计算'} />
             </div>
           </Card>
         )}
 
         <div className="grid gap-2 md:grid-cols-[1fr_auto]">
-          <Input value={customRDraft} onChange={(e) => setCustomRDraft(e.target.value)} placeholder="可调盈亏比（默认 1.55R）" />
+          <Input inputMode="decimal" value={customRDraft} onChange={(e) => setCustomRDraft(limitDecimal(e.target.value, DECIMALS.ratio))} placeholder="可调盈亏比（最多 2 位小数，默认 1.55R）" />
           <Button variant="secondary" onClick={() => {
             const next = toNum(customRDraft);
             if (!Number.isFinite(next) || next <= 0) {
@@ -235,7 +259,7 @@ export function CalculatorPage() {
           <Input readOnly value={`建议保证金：${calc ? fmt(calc.margin, 2) : '--'} U`} className={balanceOn && calc && toNum(balance) < calc.margin ? 'stat-bad' : ''} />
           <Input readOnly value={`可开数量：${calc ? fmt(calc.qty, 6) : '--'}`} />
           <Input readOnly value={`预计亏损：${calc ? fmt(calc.stopLossAmount, 2) : '--'} U`} />
-          <Input readOnly value={calc ? calc.targets.map((t) => `${t.r}R:${fmt(t.price, 4)}`).join(' / ') : '目标位（1R / 1.5R / 1.55R / 2R）'} />
+          <Input readOnly value={calc ? calc.targets.map((t) => `${fmt(t.r, DECIMALS.ratio)}R:${fmtFixed(t.price, DECIMALS.price)}`).join(' / ') : '目标位（1R / 1.5R / 1.55R / 2R）'} />
         </div>
 
         {balanceOn && calc && Number.isFinite(toNum(balance)) && toNum(balance) < calc.margin && <p className="stat-bad text-sm">所需保证金超过可用余额，当前设置下无法开仓。</p>}
